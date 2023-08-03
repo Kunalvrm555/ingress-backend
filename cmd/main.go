@@ -1,16 +1,29 @@
 package main
 
 import (
-	"fmt"
+	"ingress_backend/routes"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
-func helloWorld(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, world!")
-}
-
 func main() {
-	http.HandleFunc("/", helloWorld)
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	r := mux.NewRouter()
+
+	r.HandleFunc("/student/{rollno}", routes.GetStudent).Methods("GET")
+	log.Println("Server running on port 8000")
+
+	// CORS middleware
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	// Insert the middleware
+	handler := c.Handler(r)
+	log.Fatal(http.ListenAndServe(":8000", handler))
 }

@@ -13,8 +13,8 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/student/{rollno}", routes.GetStudent).Methods("GET")
+	r.HandleFunc("/logs", routes.GetLogs).Methods("GET")
 	log.Println("Server running on port 8000")
-
 	// CORS middleware
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},

@@ -18,12 +18,13 @@ type StudentLog struct {
 }
 
 func GetLogs(w http.ResponseWriter, r *http.Request) {
+	today := time.Now().UTC()
 	rows, err := db.Query(`SELECT l.rollno, s.name, s.type, s.dept, l.checkintime 
                             FROM logs l 
                             LEFT JOIN students s 
                             ON l.rollno = s.rollno 
-                            WHERE l.checkouttime IS NULL
-							ORDER BY l.checkintime DESC`)
+							WHERE l.checkouttime IS NULL AND DATE(l.checkintime) = $1
+							ORDER BY l.checkintime DESC`, today)
 	if err != nil {
 		http.Error(w, "Server error.", http.StatusInternalServerError)
 		fmt.Println(err, 1)

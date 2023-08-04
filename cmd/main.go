@@ -14,6 +14,7 @@ func main() {
 
 	r.HandleFunc("/student/{rollno}", routes.GetStudent).Methods("GET")
 	r.HandleFunc("/logs", routes.GetLogs).Methods("GET")
+	r.HandleFunc("/statistics", routes.GetStatistics).Methods("GET")
 	log.Println("Server running on port 8000")
 	// CORS middleware
 	c := cors.New(cors.Options{

@@ -2,19 +2,30 @@ package main
 
 import (
 	"ingress_backend/routes"
+	"ingress_backend/util"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	r := mux.NewRouter()
 
 	r.HandleFunc("/student/{rollno}", routes.GetStudent).Methods("GET")
 	r.HandleFunc("/logs", routes.GetLogs).Methods("GET")
 	r.HandleFunc("/statistics", routes.GetStatistics).Methods("GET")
+	r.HandleFunc("/login", routes.Login).Methods("POST")
+
+	// Seed users
+	util.SeedUsers()
+
 	log.Println("Server running on port 8000")
 	// CORS middleware
 	c := cors.New(cors.Options{

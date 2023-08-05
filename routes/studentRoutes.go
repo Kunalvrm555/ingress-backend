@@ -39,11 +39,14 @@ func GetStudent(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	rollNo := params["rollno"]
 
-	// Fetch student's name.
 	var name string
 	err := db.QueryRow("SELECT name FROM students WHERE rollno = $1", rollNo).Scan(&name)
 	if err != nil {
-		http.Error(w, "Failed to retrieve the student name.", http.StatusInternalServerError)
+		if err == sql.ErrNoRows {
+			http.Error(w, "Student not found.", http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to retrieve the student name.", http.StatusInternalServerError)
+		}
 		return
 	}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ingress_backend/middleware"
 	"ingress_backend/routes"
 	"ingress_backend/util"
 	"log"
@@ -18,9 +19,9 @@ func main() {
 	}
 	r := mux.NewRouter()
 
-	r.HandleFunc("/student/{rollno}", routes.GetStudent).Methods("GET")
-	r.HandleFunc("/logs", routes.GetLogs).Methods("GET")
-	r.HandleFunc("/statistics", routes.GetStatistics).Methods("GET")
+	r.HandleFunc("/student/{rollno}", middleware.JwtAuthenticationMiddleware(routes.GetStudent)).Methods("GET")
+	r.HandleFunc("/logs", middleware.JwtAuthenticationMiddleware(routes.GetLogs)).Methods("GET")
+	r.HandleFunc("/statistics", middleware.JwtAuthenticationMiddleware(routes.GetStatistics)).Methods("GET")
 	r.HandleFunc("/login", routes.Login).Methods("POST")
 
 	// Seed users

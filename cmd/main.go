@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"ingress_backend/database"
 	"ingress_backend/middleware"
 	"ingress_backend/routes"
 	"ingress_backend/util"
@@ -13,15 +15,21 @@ import (
 )
 
 func main() {
+
+	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	db := database.Connect()
+
+	// Create a new router
 	r := mux.NewRouter()
 
-	r.HandleFunc("/student/{rollno}", middleware.JwtAuthenticationMiddleware(routes.GetStudent)).Methods("GET")
-	r.HandleFunc("/logs", middleware.JwtAuthenticationMiddleware(routes.GetLogs)).Methods("GET")
-	r.HandleFunc("/statistics", middleware.JwtAuthenticationMiddleware(routes.GetStatistics)).Methods("GET")
+	r.HandleFunc("/student/{rollno}", middleware.JwtAuthenticationMiddleware(routes.GetStudent(db))).Methods("GET")
+	r.HandleFunc("/logs", middleware.JwtAuthenticationMiddleware(routes.GetLogs(db))).Methods("GET")
+	r.HandleFunc("/statistics", middleware.JwtAuthenticationMiddleware(routes.GetStatistics(db))).Methods("GET")
 	r.HandleFunc("/login", routes.Login).Methods("POST")
 
 	// Seed users
@@ -30,7 +38,8 @@ func main() {
 	log.Println("Server running on port 8000")
 	// CORS middleware
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		// Allow all origins
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
@@ -38,5 +47,6 @@ func main() {
 
 	// Insert the middleware
 	handler := c.Handler(r)
-	log.Fatal(http.ListenAndServe("127.0.0.1:8000", handler))
+	log.Fatal(http.ListenAndServe(":8000", handler))
+	fmt.Println("Server running on port 8000")
 }

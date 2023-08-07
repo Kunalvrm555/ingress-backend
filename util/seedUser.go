@@ -1,40 +1,52 @@
 package util
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
-	_ "github.com/lib/pq"
+	"ingress_backend/database"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 func SeedUsers() {
-	db, err := sql.Open("postgres", "user="+os.Getenv("POSTGRES_USERNAME")+" password="+os.Getenv("POSTGRES_PASSWORD")+" dbname=ingress sslmode=disable")
-	if err != nil {
-		log.Fatal(err, 1)
-	}
-	defer db.Close()
+	// Use the shared database connection from the database package
+	db := database.Connect()
 
 	adminPassword, err := bcrypt.GenerateFromPassword([]byte(os.Getenv("ADMIN_PASSWORD")), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal(err, 2)
+		log.Fatal("Error generating password hash for admin:", err)
 	}
 
-	_, err = db.Exec("INSERT INTO users (username, password, usertype) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING", os.Getenv("ADMIN_USERNAME"), string(adminPassword), "admin")
+	result, err := db.Exec("INSERT INTO users (username, password, usertype) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING", os.Getenv("ADMIN_USERNAME"), string(adminPassword), "admin")
 	if err != nil {
-		log.Fatal(err, 3)
+		log.Fatal("Error inserting admin:", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Fatal("Error checking affected rows for admin:", err)
+	}
+	if rowsAffected > 0 {
+		fmt.Println("Admin seed successful.")
 	}
 
 	userPassword, err := bcrypt.GenerateFromPassword([]byte(os.Getenv("PASSWORD")), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal(err, 4)
+		log.Fatal("Error generating password hash for user:", err)
 	}
 
-	_, err = db.Exec("INSERT INTO users (username, password, usertype) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING", os.Getenv("USERNAME"), string(userPassword), "user")
+	result, err = db.Exec("INSERT INTO users (username, password, usertype) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING", os.Getenv("USERNAME"), string(userPassword), "user")
 	if err != nil {
-		log.Fatal(err, 5)
+		log.Fatal("Error inserting user:", err)
 	}
-	fmt.Println("User seed successful.")
+
+	rowsAffected, err = result.RowsAffected()
+	if err != nil {
+		log.Fatal("Error checking affected rows for user:", err)
+	}
+	if rowsAffected > 0 {
+		fmt.Println("User seed successful.")
+	}
 }

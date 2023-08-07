@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
+	"ingress_backend/database"
 	"net/http"
 	"os"
 	"time"
@@ -21,6 +22,7 @@ type User struct {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	var user User
+	db := database.Connect()
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {

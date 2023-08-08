@@ -3,6 +3,7 @@ package routes
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -132,4 +133,63 @@ func GetStudent(db *sql.DB) http.HandlerFunc {
 func parseDatabaseTime(timeStr string) (time.Time, error) {
 	// The format used in the database for the time is RFC3339Nano.
 	return time.Parse(time.RFC3339Nano, timeStr)
+}
+
+// StudentInput defines the structure of the incoming JSON data.
+type StudentInput struct {
+	Type   string `json:"type"`
+	RollNo string `json:"rollno"`
+	Dept   string `json:"dept"`
+	Name   string `json:"name"`
+}
+type RowError struct {
+	RowIndex int    `json:"rowIndex"`
+	Message  string `json:"message"`
+}
+
+func AddStudents(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var students []StudentInput
+		if err := json.NewDecoder(r.Body).Decode(&students); err != nil {
+			http.Error(w, "Failed to decode request body.", http.StatusBadRequest)
+			return
+		}
+
+		var rowErrors []RowError
+		tx, err := db.Begin()
+		if err != nil {
+			http.Error(w, "Failed to begin transaction.", http.StatusInternalServerError)
+			return
+		}
+
+		for i, student := range students {
+			// Validate student data.
+			if student.RollNo == "" || student.Name == "" || student.Type == "" || student.Dept == "" {
+				rowErrors = append(rowErrors, RowError{RowIndex: i, Message: "Incomplete data in row."})
+				continue
+			}
+
+			result, err := tx.Exec(`INSERT INTO students (rollno, name, type, dept) VALUES ($1, $2, $3, $4)
+				ON CONFLICT (rollno) DO NOTHING;`,
+				student.RollNo, student.Name, student.Type, student.Dept)
+			fmt.Println(result)
+			if err != nil {
+				rowErrors = append(rowErrors, RowError{RowIndex: i, Message: err.Error()})
+			}
+		}
+
+		if err := tx.Commit(); err != nil {
+			http.Error(w, "Failed to commit transaction.", http.StatusInternalServerError)
+			return
+		}
+
+		if len(rowErrors) > 0 {
+			w.WriteHeader(http.StatusPartialContent)
+			json.NewEncoder(w).Encode(rowErrors)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "All students added successfully."})
+	}
 }

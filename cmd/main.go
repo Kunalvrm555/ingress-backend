@@ -31,6 +31,7 @@ func main() {
 	r.HandleFunc("/logs", middleware.JwtAuthenticationMiddleware(routes.GetLogs(db))).Methods("GET")
 	r.HandleFunc("/statistics", middleware.JwtAuthenticationMiddleware(routes.GetStatistics(db))).Methods("GET")
 	r.HandleFunc("/login", routes.Login).Methods("POST")
+	r.HandleFunc("/student/add", middleware.JwtAuthenticationMiddleware(routes.AddStudents(db))).Methods("POST")
 
 	// Seed users
 	util.SeedUsers()

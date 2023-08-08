@@ -21,7 +21,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main cmd/main.go
 ######## Start a new stage from scratch #######
 FROM alpine:latest  
 
-RUN apk --no-cache add ca-certificates
+# Install ca-certificates and tzdata for timezone data
+RUN apk --no-cache add ca-certificates tzdata
+
+# Set the timezone
+RUN cp /usr/share/zoneinfo/Asia/Kolkata /etc/localtime && \
+    echo "Asia/Kolkata" > /etc/timezone
 
 WORKDIR /root/
 

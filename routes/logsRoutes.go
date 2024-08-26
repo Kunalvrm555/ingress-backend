@@ -22,7 +22,7 @@ type StudentLog struct {
 func GetLogs(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		db := database.Connect()
-		today := time.Now().UTC()
+		today := time.Now().Format("2006-01-02")
 		rows, err := db.Query(`SELECT l.rollno, s.name, s.type, s.dept, l.checkintime 
                             FROM logs l 
                             LEFT JOIN students s 

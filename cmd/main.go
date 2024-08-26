@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"ingress_backend/database"
-	"ingress_backend/middleware"
 	"ingress_backend/routes"
-	"ingress_backend/util"
 	"log"
 	"net/http"
 
@@ -27,14 +25,10 @@ func main() {
 	// Create a new router
 	r := mux.NewRouter()
 
-	r.HandleFunc("/student/{rollno}", middleware.JwtAuthenticationMiddleware(routes.GetStudent(db))).Methods("GET")
-	r.HandleFunc("/logs", middleware.JwtAuthenticationMiddleware(routes.GetLogs(db))).Methods("GET")
-	r.HandleFunc("/statistics", middleware.JwtAuthenticationMiddleware(routes.GetStatistics(db))).Methods("GET")
-	r.HandleFunc("/login", routes.Login).Methods("POST")
-	r.HandleFunc("/student/add", middleware.JwtAuthenticationMiddleware(routes.AddStudents(db))).Methods("POST")
-
-	// Seed users
-	util.SeedUsers()
+	r.HandleFunc("/student/{rollno}", routes.GetStudent(db)).Methods("GET")
+	r.HandleFunc("/student", routes.AddStudent(db)).Methods("POST")
+	r.HandleFunc("/logs", routes.GetLogs(db)).Methods("GET")
+	r.HandleFunc("/statistics", routes.GetStatistics(db)).Methods("GET")
 
 	log.Println("Server running on port 8000")
 	// CORS middleware
